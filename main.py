@@ -1,25 +1,23 @@
 import pandas as pd
 from ml import config as cfg
-from stages.nlp_prep import (
-    with_mask_insertion,
-    with_mask_augmenetation,
-    with_clean_lines,
-)
-
+from stages.nlp_prep import DataFrameOperators as dfo
+from core.transformers import DocumentTransformer
+from stages.ocr_prep import OCRTransformer
 
 filepath = "/Users/michaellowe/Documents/code/git-repos/ir-document-engine/data/line_level_test.parquet"
+document = "/Users/michaellowe/Downloads/ncp-1-7.png"
 
-df = pd.read_parquet(filepath)
-df = df[df.document_num == 3]
-print("pre-tranformed count: ", df.count())
 
-test = (
-    df.pipe(with_clean_lines, "raw_text")
-    .pipe(with_mask_insertion, "raw_text")
-    .explode("masks")
-    .pipe(with_mask_augmenetation, "masks")
-)
+source -> runner(transformer) -> writer
 
-print("post-tranformed count: ", test.count())
+ocr = OCRTransformer(document)
 
-print(test)
+
+steps = {
+    "stg_1": (ocr.resize_image, {"resize_factor": (2.25, 2.25)}),
+    "stg_2": (ocr.apply_ocr, {"psm_config": "--psm 4"}),
+    "stg_3": (ocr.tokenize_data, {"token_axis": 0}),
+}
+
+ocr.run(steps)
+print(ocr.collect())
