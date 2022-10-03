@@ -39,7 +39,7 @@ class DataFrameOperators:
             perms: List = list()
             tokens: List = sequence.split(" ")
             for i, data in enumerate(tokens):
-                _: list = tokens
+                _: list = sequence.split(" ")
                 # copy tokens to do insertion
                 _[i] = "[MASK]"
                 perms.append(" ".join(_))
@@ -50,17 +50,20 @@ class DataFrameOperators:
         return df
 
     @staticmethod
-    def with_mask_augmenetation(df: pd.DataFrame, column: str) -> pd.DataFrame:
+    def with_mask_augmenetation(
+        df: pd.DataFrame, column: str, drop_col: str = None
+    ) -> pd.DataFrame:
         MASKING_PIPELINE = pipeline(
             "fill-mask",
             model="bert-base-uncased",
         )
 
-        def _(sequence: Optional["str"]) -> str:
-
+        def _(sequence: Optional[List["str"]]) -> str:
             aug: list = [x["sequence"] for x in MASKING_PIPELINE(sequence)]
             return aug
 
+        df = df.drop(columns=[drop_col]) if drop_col else df
+        df = df.explode(column)
         df["generative_augs"] = list(map(_, df[column]))
         df = df.explode("generative_augs")
         return df

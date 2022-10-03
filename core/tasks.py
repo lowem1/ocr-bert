@@ -10,3 +10,6 @@ def document_task(filepath: str) -> pd.DataFrame:
     return dt.transform(OCROperators.apply_ocr).transform(
         OCROperators.create_text_dataframe
     )
+
+def text_task(pd.DataFrame: str) -> pd.DataFrame:
+    
